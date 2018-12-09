@@ -52,7 +52,6 @@ class KNN:
 class ID3:
 	def __init__(self, nbins, data_range):
 		#Decision tree state here
-		#Feel free to add methods
 		self.bin_size = nbins
 		self.range = data_range
 
@@ -63,22 +62,18 @@ class ID3:
 		return categorical_data
 
 	def train(self, X, y):
-		#training logic here
 		#input is array of features and labels
 		categorical_data = self.preprocess(X)
 		print(categorical_data)
 
 	def predict(self, X):
-		#Run model here
 		#Return array of predictions where there is one prediction for each set of features
 		categorical_data = self.preprocess(X)
 		return None
 
 class Perceptron:
 	def __init__(self, w, b, lr):
-		#Perceptron state here, input initial weight matrix
-		#Feel free to add methods
-		self.lr = lr
+		self.lr = lr 
 		self.w = w
 		self.b = b
 
@@ -104,7 +99,6 @@ class Perceptron:
 		None
 
 	def predict(self, X):
-		#Return array of predictions where there is one prediction for each set of features
 		prediction_list = np.empty([len(X)])
 
 		for return_index, observation in enumerate(X):
@@ -179,7 +173,8 @@ class FCLayer:
 		return None	
 
 class Sigmoid:
-
+	#Logistic Curve: Very neg inputs end up close to zero, Very pos inputs end up close to 1 
+	
 	def __init__(self):
 		None
 
