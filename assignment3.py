@@ -58,9 +58,10 @@ class ID3:
 		self.root = None
 
 	class Node:
-		def __init__(self, parent_node):		
+		def __init__(self, parent_node, current_dataset):		
 			self.parent_node = parent_node
 			self.child_node = None
+			self.curr_dataset = current_dataset
 
 		def update_child(self, child):
 			self.child_node = []
@@ -74,12 +75,22 @@ class ID3:
 
 	def train(self, X, y):
 		#input is array of features and labels
+		#if there are 3 bins that indicates every node will have 3 children
+		#having a lot of trouble with this
 		self.X_train = X
 		self.y_train = y
 		categorical_data = self.preprocess(X)
-
 		
+		feature_entropy = []
+		info_gain_feats = []
 
+		for counter in range(30):
+			feature_to_test = categorical_data[:,counter]
+			entropy_feature = self.calculate_entropy(feature_to_test)
+			feature_entropy.append(entropy_feature)
+
+		for index,feature_pop in enumerate(entropy_feature):
+    		info_gain_feats.append(self.calculate_information_gain(feature_entropy[index], np.size(entropy_feature[index]),))
 
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
@@ -89,14 +100,11 @@ class ID3:
 
 	def calculate_entropy(self, population):
     	#finds entropy of passed population value
-		#num_ones = np.count_nonzero(population==1)
-		#num_zeros = np.size(population) - num_ones
 		curr_entropy = 0
 
 		for unique_val in np.unique(population):
     		#Capture all unique values in the population and calculate total entropy
-			percent_pop = population[unique_val] / np.size(population)
-
+			percent_pop = np.size(population[unique_val]) / np.size(population)
 			curr_entropy = curr_entropy + -(percent_pop * math.log(percent_pop, 2))
 
 		return curr_entropy
