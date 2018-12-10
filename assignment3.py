@@ -62,10 +62,56 @@ class ID3:
 			self.parent_node = parent_node
 			self.child_node = None
 			self.curr_dataset = current_dataset
+			self.total_entropy = 0
+			self.feature_entropy = []
 
 		def update_child(self, child):
 			self.child_node = []
 			self.child_node.append(child)
+
+		def split_find_infogain(self):
+    		# split off each attribute and find the highest info gain
+			# strip off all attributes from current dataset 
+			max_info_gain = -10000.0
+			for attr_counter in range(np.size(self.curr_dataset[0])):
+				proxy_dataset = np.delete(self.curr_dataset,[attr_counter],1)
+				new_entropy, feature_entropy = self.calculate_entropies_of_features(proxy_dataset)
+
+				info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset))
+
+				if info_gain > max_info_gain:
+    				max_info_gain = info_gain
+					
+
+		def calculate_entropies_of_features(self, total_population):
+    		# Calculate entropies of all features in current dataset
+			# Stores entropies in list within node structure
+			feature_entropy = []
+			
+			for counter in range(np.size(total_population[0])):
+				feature_to_test = total_population[:,counter]
+				entropy_feature = self.calculate_entropy(feature_to_test)
+				feature_entropy.append(entropy_feature)
+
+			return sum(feature_entropy), feature_entropy #returns sum of total entropy of current state and individual feature entropies
+			
+		def calculate_information_gain(self, initial_entropy, initial_pop_size):
+        	#Calculate information gain from split on specific attribute
+			#will have greatest information gain and deal with that first
+			pop_sub_prop = np.size(subset)/initial_pop_size
+
+			return initial_entropy - pop_sub_prop * self.calculate_entropy(subset)
+
+		def calculate_entropy(self, population):
+        	#finds entropy of passed population value
+			curr_entropy = 0
+
+			for unique_val in np.unique(population):
+    			#Capture all unique values in the population and calculate total entropy
+				percent_pop = np.size(population[unique_val]) / np.size(population)
+				curr_entropy = curr_entropy + -(percent_pop * math.log(percent_pop, 2))
+
+			return curr_entropy
 
 	def preprocess(self, data):
 		#Our dataset only has continuous data
@@ -74,46 +120,27 @@ class ID3:
 		return categorical_data
 
 	def train(self, X, y):
-		#input is array of features and labels
-		#if there are 3 bins that indicates every node will have 3 children
+		#Calculate entropies
+		#Split data set on different attributes
 		#having a lot of trouble with this
 		self.X_train = X
 		self.y_train = y
 		categorical_data = self.preprocess(X)
+
+		self.root = self.Node(None, categorical_data)
+
+		curr_node = self.root
+
+		curr_node.total_entropy, curr_node.feature_entropy = curr_node.calculate_entropies_of_features(curr_node.curr_dataset)
+
+		curr_node.split_find_infogain()
 		
-		feature_entropy = []
-		info_gain_feats = []
-
-		for counter in range(30):
-			feature_to_test = categorical_data[:,counter]
-			entropy_feature = self.calculate_entropy(feature_to_test)
-			feature_entropy.append(entropy_feature)
-
-		for index,feature_pop in enumerate(entropy_feature):
-    		info_gain_feats.append(self.calculate_information_gain(feature_entropy[index], np.size(entropy_feature[index]),))
 
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
 		categorical_data = self.preprocess(X)
 		print(categorical_data)
 		return None
-
-	def calculate_entropy(self, population):
-    	#finds entropy of passed population value
-		curr_entropy = 0
-
-		for unique_val in np.unique(population):
-    		#Capture all unique values in the population and calculate total entropy
-			percent_pop = np.size(population[unique_val]) / np.size(population)
-			curr_entropy = curr_entropy + -(percent_pop * math.log(percent_pop, 2))
-
-		return curr_entropy
-
-	def calculate_information_gain(self, initial_entropy, initial_pop_size, subset):
-    	#Calculate information gain from split on specific attribute
-		pop_sub_prop = np.size(subset)/initial_pop_size
-
-		return initial_entropy - pop_sub_prop * self.calculate_entropy(subset)
 
 class Perceptron:
 	def __init__(self, w, b, lr):
