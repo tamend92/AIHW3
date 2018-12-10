@@ -79,9 +79,9 @@ class ID3:
 
 				info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset))
 
-				if info_gain > max_info_gain:
-    				max_info_gain = info_gain
-					
+				if info_gain > max_info_gain:	
+					max_info_gain = info_gain
+
 
 		def calculate_entropies_of_features(self, total_population):
     		# Calculate entropies of all features in current dataset
