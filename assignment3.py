@@ -58,31 +58,39 @@ class ID3:
 		self.root = None
 
 	class Node:
-		def __init__(self, parent_node, current_dataset):		
+		def __init__(self, parent_node, current_dataset, bin_value, attribute_to_check):		
 			self.parent_node = parent_node
 			self.child_node = None
 			self.curr_dataset = current_dataset
 			self.total_entropy = 0
 			self.feature_entropy = []
+			self.bin_value = bin_value
+			self.attribute = attribute_to_check
 
 		def update_child(self, child):
-			self.child_node = []
+    		
+			if self.child_node is None:
+				self.child_node = []
+			
 			self.child_node.append(child)
 
 		def split_find_infogain(self):
     		# split off each attribute and find the highest info gain
 			# strip off all attributes from current dataset 
+			# returns attribute to split on
 			max_info_gain = -10000.0
 			for attr_counter in range(np.size(self.curr_dataset[0])):
 				proxy_dataset = np.delete(self.curr_dataset,[attr_counter],1)
-				new_entropy, feature_entropy = self.calculate_entropies_of_features(proxy_dataset)
 
-				info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset))
+				info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset), proxy_dataset)
 
 				if info_gain > max_info_gain:	
 					max_info_gain = info_gain
+					attr = attr_counter
 
-
+			# return info for split and attribute to split on 
+			return attr, np.unique(self.curr_dataset[:,attr])
+			
 		def calculate_entropies_of_features(self, total_population):
     		# Calculate entropies of all features in current dataset
 			# Stores entropies in list within node structure
@@ -95,7 +103,7 @@ class ID3:
 
 			return sum(feature_entropy), feature_entropy #returns sum of total entropy of current state and individual feature entropies
 			
-		def calculate_information_gain(self, initial_entropy, initial_pop_size):
+		def calculate_information_gain(self, initial_entropy, initial_pop_size, subset):
         	#Calculate information gain from split on specific attribute
 			#will have greatest information gain and deal with that first
 			pop_sub_prop = np.size(subset)/initial_pop_size
@@ -127,14 +135,20 @@ class ID3:
 		self.y_train = y
 		categorical_data = self.preprocess(X)
 
-		self.root = self.Node(None, categorical_data)
+		#pass none as root node has no bin value or parent node just storing and starting tree
+		self.root = self.Node(None, categorical_data, None, None)
 
 		curr_node = self.root
 
 		curr_node.total_entropy, curr_node.feature_entropy = curr_node.calculate_entropies_of_features(curr_node.curr_dataset)
 
-		curr_node.split_find_infogain()
-		
+		attr_to_split, child_bin_vals = curr_node.split_find_infogain()
+
+		for child_val in child_bin_vals:
+    			curr_node.update_child(self.Node(curr_node,np.delete(curr_node.curr_dataset,[attr_to_split],1),child_val, attr_to_split))
+	#def recursive_iterator_function(self, current_node):
+    	#Helper function to recursively iterate over all children in the set
+
 
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
