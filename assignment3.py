@@ -66,6 +66,7 @@ class ID3:
 			self.feature_entropy = []
 			self.bin_value = bin_value
 			self.attribute = attribute_to_check
+			self.leaf_value = None
 
 		def update_child(self, child):
     		
@@ -156,15 +157,25 @@ class ID3:
 
 		#base case No children left to analyze potentially leaf node
 		if current_node.get_children() == None:
-    		
 			iterator_node = current_node
-			
 			list_of_feature_values = []
 			
 			while iterator_node.parent_node is not None:
-    			list_of_feature_values.insert(0,iterator_node.bin_value)
+				list_of_feature_values.insert(0,iterator_node.bin_value)
 				iterator_node = iterator_node.parent_node
 
+			current_node.leaf_value = self.y_train[self.X_train.index(list_of_feature_values)]
+		else:
+			
+			for child in current_node.get_children():
+				child.total_entropy, child.feature_entropy = child.calculate_entropies_of_features(child.curr_dataset)
+
+				attr_to_split, child_bin_vals = child.split_find_infogain()
+
+				for child_val in child_bin_vals:
+					child.update_child(self.Node(child,np.delete(child.curr_dataset,[attr_to_split],1),child_val, attr_to_split))
+    		
+			self.recursive_iterator_function(child)
 
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
