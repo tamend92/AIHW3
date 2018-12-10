@@ -60,7 +60,7 @@ class ID3:
 	class Node:
 		def __init__(self, parent_node, current_dataset, bin_value, attribute_to_check):		
 			self.parent_node = parent_node
-			self.child_node = None
+			self.child_nodes = None
 			self.curr_dataset = current_dataset
 			self.total_entropy = 0
 			self.feature_entropy = []
@@ -69,10 +69,14 @@ class ID3:
 
 		def update_child(self, child):
     		
-			if self.child_node is None:
-				self.child_node = []
+			if self.child_nodes is None:
+				self.child_nodes = []
 			
-			self.child_node.append(child)
+			self.child_nodes.append(child)
+
+		def get_children(self):
+    		#returns child nodes
+			return self.child_nodes
 
 		def split_find_infogain(self):
     		# split off each attribute and find the highest info gain
@@ -146,8 +150,20 @@ class ID3:
 
 		for child_val in child_bin_vals:
     			curr_node.update_child(self.Node(curr_node,np.delete(curr_node.curr_dataset,[attr_to_split],1),child_val, attr_to_split))
-	#def recursive_iterator_function(self, current_node):
-    	#Helper function to recursively iterate over all children in the set
+	
+	def recursive_iterator_function(self, current_node):
+    	#Helper function to recursively iterate over all children in the node
+
+		#base case No children left to analyze potentially leaf node
+		if current_node.get_children() == None:
+    		
+			iterator_node = current_node
+			
+			list_of_feature_values = []
+			
+			while iterator_node.parent_node is not None:
+    			list_of_feature_values.insert(0,iterator_node.bin_value)
+				iterator_node = iterator_node.parent_node
 
 
 	def predict(self, X):
