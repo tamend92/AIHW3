@@ -83,18 +83,25 @@ class ID3:
     		# split off each attribute and find the highest info gain
 			# strip off all attributes from current dataset 
 			# returns attribute to split on
-			max_info_gain = -10000.0
-			for attr_counter in range(np.size(self.curr_dataset[0])):
-				proxy_dataset = np.delete(self.curr_dataset,[attr_counter],1)
 
-				info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset), proxy_dataset)
+			if not len(self.curr_dataset[0]) < 2:
+				max_info_gain = -10000.0
+				info_gain = 0
+				for attr_counter in range(len(self.curr_dataset[0])):
+					test_dataset = self.curr_dataset
+					proxy_dataset = np.delete(test_dataset,[attr_counter],1)
 
-				if info_gain > max_info_gain:	
-					max_info_gain = info_gain
-					attr = attr_counter
+					info_gain = self.calculate_information_gain(self.total_entropy, np.size(self.curr_dataset), proxy_dataset)
 
-			# return info for split and attribute to split on 
-			return attr, np.unique(self.curr_dataset[:,attr])
+					if info_gain > max_info_gain:
+						
+						max_info_gain = info_gain
+						
+						attr = attr_counter
+
+				return attr, np.unique(self.curr_dataset[:,attr])
+			else:
+				return 0, np.unique(self.curr_dataset[0])		
 			
 		def calculate_entropies_of_features(self, total_population):
     		# Calculate entropies of all features in current dataset
@@ -152,6 +159,8 @@ class ID3:
 		for child_val in child_bin_vals:
     			curr_node.update_child(self.Node(curr_node,np.delete(curr_node.curr_dataset,[attr_to_split],1),child_val, attr_to_split))
 	
+		self.recursive_iterator_function(curr_node)
+
 	def recursive_iterator_function(self, current_node):
     	#Helper function to recursively iterate over all children in the node
 
@@ -164,7 +173,7 @@ class ID3:
 				list_of_feature_values.insert(0,iterator_node.bin_value)
 				iterator_node = iterator_node.parent_node
 
-			current_node.leaf_value = self.y_train[self.X_train.index(list_of_feature_values)]
+			current_node.leaf_value = self.y_train[np.where(self.X_train==np.array(list_of_feature_values))]
 		else:
 			
 			for child in current_node.get_children():
@@ -180,8 +189,32 @@ class ID3:
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
 		categorical_data = self.preprocess(X)
-		print(categorical_data)
-		return None
+		
+		prediction_array = []
+		#iterate over all observations in the dataset and match them to the node bins so that
+		#a prediction can be made
+
+		current_node = self.root
+
+		for observation in categorical_data:
+			
+			prediction_found = False				
+			
+			while prediction_found != True:
+				
+				if current_node.get_children() != []:
+    				
+					for child_node in current_node.get_children():
+    						
+						if child_node.bin_value == observation[child_node.attribute]:
+							current_node = child_node
+							break	
+				else:
+    				#leaf found
+					prediction_array.append(current_node.leaf_value)
+					prediction_found = True
+		
+		return np.array(prediction_array)
 
 class Perceptron:
 	def __init__(self, w, b, lr):
