@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class KNN:
 	def __init__(self, k):
@@ -54,6 +55,16 @@ class ID3:
 		#Decision tree state here
 		self.bin_size = nbins
 		self.range = data_range
+		self.root = None
+
+	class Node:
+		def __init__(self, parent_node):		
+			self.parent_node = parent_node
+			self.child_node = None
+
+		def update_child(self, child):
+			self.child_node = []
+			self.child_node.append(child)
 
 	def preprocess(self, data):
 		#Our dataset only has continuous data
@@ -63,13 +74,38 @@ class ID3:
 
 	def train(self, X, y):
 		#input is array of features and labels
+		self.X_train = X
+		self.y_train = y
 		categorical_data = self.preprocess(X)
-		print(categorical_data)
+
+		
+
 
 	def predict(self, X):
 		#Return array of predictions where there is one prediction for each set of features
 		categorical_data = self.preprocess(X)
+		print(categorical_data)
 		return None
+
+	def calculate_entropy(self, population):
+    	#finds entropy of passed population value
+		#num_ones = np.count_nonzero(population==1)
+		#num_zeros = np.size(population) - num_ones
+		curr_entropy = 0
+
+		for unique_val in np.unique(population):
+    		#Capture all unique values in the population and calculate total entropy
+			percent_pop = population[unique_val] / np.size(population)
+
+			curr_entropy = curr_entropy + -(percent_pop * math.log(percent_pop, 2))
+
+		return curr_entropy
+
+	def calculate_information_gain(self, initial_entropy, initial_pop_size, subset):
+    	#Calculate information gain from split on specific attribute
+		pop_sub_prop = np.size(subset)/initial_pop_size
+
+		return initial_entropy - pop_sub_prop * self.calculate_entropy(subset)
 
 class Perceptron:
 	def __init__(self, w, b, lr):
@@ -165,11 +201,11 @@ class FCLayer:
 		self.b = b
 
 	def forward(self, input):
-		#Write forward pass here
+		
 		return None
 
 	def backward(self, gradients):
-		#Write backward pass here
+
 		return None	
 
 class Sigmoid:
